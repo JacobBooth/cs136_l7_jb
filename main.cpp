@@ -40,3 +40,58 @@ enum MenuOption {
     QUIT
 };
 
+int extractHashIndex(const char id[], int tableSize) {
+    char trimmed[8] = {};
+    strncpy(trimmed, id + 2, 7);
+    trimmed[7] = '\0';
+
+    char group1[4] = {}, group2[5] = {};
+    strncpy(group1, trimmed, 3);
+    strncpy(group2, trimmed + 3, 4);
+
+    for (int i = 0; i < 3 / 2; ++i) {
+        swap(group1[i], group1[2 - i]);
+    }
+    for (int i = 0; i < 4 / 2; ++i) {
+        swap(group2[i], group2[3 - i]);
+    }
+
+    int folded = atoi(group1) + atoi(group2);
+    long long squared = (long long)folded * folded;
+
+    char squaredStr[20];
+    sprintf(squaredStr, "%lld", squared);
+    int len = strlen(squaredStr);
+
+    if (tableSize == 10) {
+        return squaredStr[len / 2] - '0';
+    } else if (tableSize == 100) {
+        return ((squaredStr[len / 2] - '0') * 10 + (squaredStr[len / 2 + 1] - '0')) % tableSize;
+    } else {
+        return ((squaredStr[len / 2] - '0') * 100 + (squaredStr[len / 2 + 1] - '0') * 10 + (squaredStr[len / 2 + 2] - '0')) % tableSize;
+    }
+}
+
+void insertRecord(const Student& s) {
+    int index = extractHashIndex(s.id, hashTableSize);
+
+    if (!hashTable[index].occupied) {
+        hashTable[index] = s;
+        hashTable[index].occupied = true;
+    } else {
+        bool placed = false;
+        for (int i = 0; i < overflowSize; ++i) {
+            if (!overflowTable[i].occupied) {
+                overflowTable[i] = s;
+                overflowTable[i].occupied = true;
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) {
+            if (unprocessedCount < MAX_RECORDS) {
+                unprocessedTable[unprocessedCount++] = s;
+            }
+        }
+    }
+}
